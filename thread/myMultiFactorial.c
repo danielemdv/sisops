@@ -4,35 +4,37 @@
 
 int main(int argc, char *argv[]) { /* sequential code */
 
+int res = 1;
+#pragma omp threadprivate(res)
 
-int i, N=7,ans;
-
-int ress[4]; //Array to store pre answers (before joining)...
-//Initialize the array to 1s
-for(i = 1; i < 4; i++){
-  ress[i] = 1;
-}
+int i, N=7,ans = 1;
 
 
 
+printf("Num maximo de threads que se pueden crear: %d",omp_get_max_threads());
 
-          /* sequential code */
+
+
 #pragma omp parallel for
 for(i=1;i<N;i++) {
   //Note the for starts at 1 cause we're going to ignore 0 in the multiplication.
 
-    ress[omp_get_thread_num()] = /*ress[omp_get_thread_num()]**/i*(i+1); //Calculates the products and stores them seperately
+    res = res *i*(i+1); //ir acumulando el resultado de los 'factoriales parciales' en res que es de TLS para cada thread.
+
     printf("Calculando entrada %d\n",i);
-    //sleep(1);
 }
 
 printf("Integrating answer");
 
-ans = ress[0];
-for(i = 1; i < 4; i++){
-  //note for starts at 1
-  ans = ans * ress[i];
+#pragma omp parallel
+{
+	#pragma omp atomic
+	{
+		ans	= ans * res;
+	}
+	
 }
+
 
 printf("\nEl resultado es! %d\n", ans);
 
